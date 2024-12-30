@@ -12,6 +12,22 @@ const mapContainerStyle = {
   height: '100%',
 };
 
+const markerOptions = {
+  position: defaultCenter,
+  title: 'my location',
+};
+
+const polylineOptions = {
+  strokeColor: '#FF0000',
+  strokeWeight: 2,
+};
+const polygonOptions = {
+  strokeColor: '#FF0000',
+  strokeWeight: 2,
+  fillColor: 'yellow',
+  fillOpacity: 0.3,
+};
+
 const libraries = ['marker', 'places', 'drawing'];
 
 function Map() {
@@ -42,14 +58,15 @@ function Map() {
     [isMarkMode],
   );
 
-  const onLoad = useCallback((mapInstance) => {
+  const createMarker = (mapInstance) => {
     const newMarker = new window.google.maps.marker.AdvancedMarkerElement({
       map: mapInstance,
-      position: defaultCenter,
-      title: 'my location',
+      ...markerOptions,
     });
     setMarker(newMarker);
+  };
 
+  const createDrawingManager = (mapInstance) => {
     const drawingManagerInstance = new window.google.maps.drawing.DrawingManager({
       drawingMode: null,
       drawingControl: false,
@@ -60,21 +77,13 @@ function Map() {
           window.google.maps.drawing.OverlayType.POLYGON,
         ],
       },
-      polylineOptions: {
-        strokeColor: '#FF0000',
-        strokeWeight: 2,
-      },
-      polygonOptions: {
-        strokeColor: '#FF0000',
-        strokeWeight: 2,
-        fillColor: 'yellow',
-        fillOpacity: 0.3,
-      },
+      polylineOptions,
+      polygonOptions,
     });
+
     drawingManagerInstance.setMap(mapInstance);
     setDrawingManager(drawingManagerInstance);
 
-    // Add listener for when a shape is completed
     window.google.maps.event.addListener(
       drawingManagerInstance,
       'overlaycomplete',
@@ -84,6 +93,11 @@ function Map() {
         setShapes((prev) => [...prev, shape]);
       },
     );
+  };
+
+  const onLoad = useCallback((mapInstance) => {
+    createMarker(mapInstance);
+    createDrawingManager(mapInstance);
   }, []);
 
   const onUnmount = useCallback(() => {
