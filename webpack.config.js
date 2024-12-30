@@ -1,5 +1,6 @@
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
+const Dotenv = require('dotenv-webpack');
 
 const config = {
   // mode: 'development',
@@ -65,8 +66,9 @@ const config = {
   plugins: [
     new HtmlWebpackPlugin({
       template: 'public/index.html',
-      // favicon: 'public/favicon.png',
+      favicon: 'public/favicon.png',
     }),
+    new Dotenv(),
   ],
   resolve: {
     extensions: ['.jsx', '.js', '.json'],
