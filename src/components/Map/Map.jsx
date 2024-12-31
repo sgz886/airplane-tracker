@@ -148,7 +148,7 @@ function Map() {
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
         center={defaultCenter}
-        zoom={14}
+        zoom={13}
         onLoad={onLoad}
         onUnmount={onUnmount}
         onClick={handleMapClick}
