@@ -174,7 +174,7 @@ function Map() {
     }
   }, [drawingManager]);
 
-  if (!isLoaded) return <div>Loading...</div>;
+  if (!isLoaded) return <div className='text-2xl'>Loading...</div>;
 
   return (
     <div className='relative h-full w-full'>
