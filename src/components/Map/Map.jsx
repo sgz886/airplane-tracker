@@ -1,8 +1,10 @@
 import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
-import { memo, useCallback, useState } from 'react';
+import {
+  memo, useCallback, useEffect, useState,
+} from 'react';
 import ActionButton from './ActionButton';
 
-const defaultCenter = {
+const defaultLocation = {
   lat: -37.8136,
   lng: 144.9631,
 };
@@ -10,11 +12,6 @@ const defaultCenter = {
 const mapContainerStyle = {
   width: '100%',
   height: '100%',
-};
-
-const markerOptions = {
-  position: defaultCenter,
-  title: 'my location',
 };
 
 const polylineOptions = {
@@ -31,6 +28,7 @@ const polygonOptions = {
 const libraries = ['marker', 'places', 'drawing'];
 
 function Map() {
+  const [center, setCenter] = useState(defaultLocation);
   const [marker, setMarker] = useState(null);
   const [drawingManager, setDrawingManager] = useState(null);
   const [shapes, setShapes] = useState([]);
@@ -43,13 +41,42 @@ function Map() {
     libraries,
   });
 
+  useEffect(() => {
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const browserLocation = {
+            lat: position.coords.latitude,
+            lng: position.coords.longitude,
+          };
+          setCenter(browserLocation);
+          if (marker) {
+            marker.position = browserLocation;
+          }
+        },
+        (error) => {
+          console.error('Error getting location:', error);
+          console.log('use default center location');
+          setCenter(defaultLocation);
+        },
+      );
+    } else {
+      console.log('Geolocation is not supported by this browser.');
+      setCenter(defaultLocation);
+    }
+  }, []);
+
+  // when user select allow user location, update marker according to the browser location
+  useEffect(() => {
+    if (marker) {
+      marker.position = center;
+    }
+  }, [center]);
+
   const handleMapClick = useCallback(
     (e) => {
       if (!isMarkMode) return;
-      const newPosition = {
-        lat: e.latLng.lat(),
-        lng: e.latLng.lng(),
-      };
+      const newPosition = e.latLng;
       if (marker) {
         marker.position = newPosition;
       }
@@ -61,7 +88,8 @@ function Map() {
   const createMarker = (mapInstance) => {
     const newMarker = new window.google.maps.marker.AdvancedMarkerElement({
       map: mapInstance,
-      ...markerOptions,
+      position: center,
+      title: 'my location',
     });
     setMarker(newMarker);
   };
@@ -88,17 +116,20 @@ function Map() {
       drawingManagerInstance,
       'overlaycomplete',
       (event) => {
-        drawingManagerInstance.setDrawingMode(null);
         const shape = event.overlay;
         setShapes((prev) => [...prev, shape]);
+        drawingManagerInstance.setDrawingMode(null);
       },
     );
   };
 
-  const onLoad = useCallback((mapInstance) => {
-    createMarker(mapInstance);
-    createDrawingManager(mapInstance);
-  }, []);
+  const onLoad = useCallback(
+    (mapInstance) => {
+      createMarker(mapInstance);
+      createDrawingManager(mapInstance);
+    },
+    [center],
+  );
 
   const onUnmount = useCallback(() => {
     if (marker) {
@@ -111,6 +142,7 @@ function Map() {
   }, [marker, drawingManager, shapes]);
 
   const startDrawingLine = () => {
+    setIsMarkMode(false);
     if (drawingManager) {
       drawingManager.setDrawingMode(
         window.google.maps.drawing.OverlayType.POLYLINE,
@@ -119,6 +151,7 @@ function Map() {
   };
 
   const startDrawingPolygon = () => {
+    setIsMarkMode(false);
     if (drawingManager) {
       drawingManager.setDrawingMode(
         window.google.maps.drawing.OverlayType.POLYGON,
@@ -147,7 +180,7 @@ function Map() {
     <div className='relative h-full w-full'>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={defaultCenter}
+        center={center}
         zoom={13}
         onLoad={onLoad}
         onUnmount={onUnmount}
@@ -161,7 +194,9 @@ function Map() {
         <ActionButton
           onClick={startMarkMode}
           disabled={isMarkMode}
-          className={isMarkMode ? 'bg-lime-600' : 'bg-lime-500 hover:bg-lime-600'}
+          className={
+            isMarkMode ? 'bg-lime-600' : 'bg-lime-500 hover:bg-lime-600'
+          }
         >
           {isMarkMode ? 'Click on map' : 'Mark'}
         </ActionButton>
