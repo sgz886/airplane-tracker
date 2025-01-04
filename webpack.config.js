@@ -47,8 +47,15 @@ const config = {
         type: 'asset/resource',
       },
       {
-        test: /\.svg/,
-        type: 'asset/inline',
+        test: /\.svg$/,
+        use: [
+          {
+            loader: 'url-loader',
+            options: {
+              limit: 10000,
+            },
+          },
+        ],
       },
       {
         test: /\.txt/,

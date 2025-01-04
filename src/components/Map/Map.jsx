@@ -2,11 +2,13 @@ import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import {
   memo, useCallback, useEffect, useState,
 } from 'react';
+import FlightMarker from '../FlightMarker';
+import subscribeToFlightData from '../../services';
 import ActionButton from './ActionButton';
 
 const defaultLocation = {
-  lat: -37.8136,
-  lng: 144.9631,
+  lat: -37.665,
+  lng: 144.841,
 };
 
 const mapContainerStyle = {
@@ -28,12 +30,11 @@ const polygonOptions = {
 const libraries = ['marker', 'places', 'drawing'];
 
 function Map() {
-  const [center, setCenter] = useState(defaultLocation);
   const [marker, setMarker] = useState(null);
+  const [flightData, setFlightData] = useState({});
   const [drawingManager, setDrawingManager] = useState(null);
   const [shapes, setShapes] = useState([]);
-  const [isMarkMode, setIsMarkMode] = useState(false);
-
+  console.log('shapes = ', shapes);
   const { isLoaded } = useJsApiLoader({
     id: 'map1',
     googleMapsApiKey: process.env.REACT_APP_GOOGLE_MAPS_API_KEY,
@@ -42,53 +43,16 @@ function Map() {
   });
 
   useEffect(() => {
-    if ('geolocation' in navigator) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const browserLocation = {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude,
-          };
-          setCenter(browserLocation);
-          if (marker) {
-            marker.position = browserLocation;
-          }
-        },
-        (error) => {
-          console.error('Error getting location:', error);
-          console.log('use default center location');
-          setCenter(defaultLocation);
-        },
-      );
-    } else {
-      console.log('Geolocation is not supported by this browser.');
-      setCenter(defaultLocation);
-    }
+    // Subscribe to flight data updates
+    const unsubscribe = subscribeToFlightData(setFlightData);
+    // Cleanup subscription on unmount
+    return () => unsubscribe();
   }, []);
-
-  // when user select allow user location, update marker according to the browser location
-  useEffect(() => {
-    if (marker) {
-      marker.position = center;
-    }
-  }, [center]);
-
-  const handleMapClick = useCallback(
-    (e) => {
-      if (!isMarkMode) return;
-      const newPosition = e.latLng;
-      if (marker) {
-        marker.position = newPosition;
-      }
-      setIsMarkMode(false);
-    },
-    [isMarkMode],
-  );
 
   const createMarker = (mapInstance) => {
     const newMarker = new window.google.maps.marker.AdvancedMarkerElement({
       map: mapInstance,
-      position: center,
+      position: defaultLocation,
       title: 'my location',
     });
     setMarker(newMarker);
@@ -125,10 +89,10 @@ function Map() {
 
   const onLoad = useCallback(
     (mapInstance) => {
-      createMarker(mapInstance);
+      // createMarker(mapInstance);
       createDrawingManager(mapInstance);
     },
-    [center],
+    [],
   );
 
   const onUnmount = useCallback(() => {
@@ -142,7 +106,6 @@ function Map() {
   }, [marker, drawingManager, shapes]);
 
   const startDrawingLine = () => {
-    setIsMarkMode(false);
     if (drawingManager) {
       drawingManager.setDrawingMode(
         window.google.maps.drawing.OverlayType.POLYLINE,
@@ -151,7 +114,6 @@ function Map() {
   };
 
   const startDrawingPolygon = () => {
-    setIsMarkMode(false);
     if (drawingManager) {
       drawingManager.setDrawingMode(
         window.google.maps.drawing.OverlayType.POLYGON,
@@ -167,40 +129,22 @@ function Map() {
     }
   };
 
-  const startMarkMode = useCallback(() => {
-    setIsMarkMode(true);
-    if (drawingManager) {
-      drawingManager.setDrawingMode(null);
-    }
-  }, [drawingManager]);
-
   if (!isLoaded) return <div className='text-2xl'>Loading...</div>;
 
   return (
     <div className='relative h-full w-full'>
       <GoogleMap
         mapContainerStyle={mapContainerStyle}
-        center={center}
-        zoom={13}
+        center={defaultLocation}
+        zoom={14}
         onLoad={onLoad}
         onUnmount={onUnmount}
-        onClick={handleMapClick}
         options={{
           mapId: process.env.REACT_APP_GOOGLE_MAPS_MAP_ID,
-          draggableCursor: isMarkMode ? 'crosshair' : 'grab',
         }}
-      />
-      <div className='absolute bottom-16 left-4 flex'>
-        <ActionButton
-          onClick={startMarkMode}
-          disabled={isMarkMode}
-          className={
-            isMarkMode ? 'bg-lime-600' : 'bg-lime-500 hover:bg-lime-600'
-          }
-        >
-          {isMarkMode ? 'Click on map' : 'Mark'}
-        </ActionButton>
-      </div>
+      >
+        {flightData && <FlightMarker flightData={flightData} />}
+      </GoogleMap>
       <div className='absolute bottom-4 left-4 flex gap-2'>
         <ActionButton
           onClick={startDrawingLine}
