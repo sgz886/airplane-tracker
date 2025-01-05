@@ -5,7 +5,7 @@
   "main": "src/index.jsx",
   "scripts": {
     "start": "open-cli http://localhost:3000 && npx webpack serve --mode=development",
-    "build": "npx webpack build --mode=production",
+    "build": "NODE_ENV=production npx webpack build --mode=production",
     "lint": "eslint . --ext .js --ext .jsx --ignore-path .gitignore",
     "test": "jest",
     "prepare": "husky install"

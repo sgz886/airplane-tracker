@@ -1,6 +1,6 @@
-const HtmlWebpackPlugin = require('html-webpack-plugin');
 const path = require('path');
 const Dotenv = require('dotenv-webpack');
+const HtmlWebpackPlugin = require('html-webpack-plugin');
 
 const config = {
   // mode: 'development',
@@ -71,6 +71,9 @@ const config = {
     port: 3000,
   },
   plugins: [
+    new Dotenv({
+      path: process.env.NODE_ENV === 'production' ? '.env.production' : '.env',
+    }),
     new HtmlWebpackPlugin({
       template: 'public/index.html',
       favicon: 'public/favicon.png',
