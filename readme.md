@@ -1,14 +1,17 @@
-# Draw on Google Map
+# Airplane Tracker
 
 ## Overview
 
-Draw on Google Map is a React-based web application that integrates with the Google Maps API to provide an interactive map experience. Users can view a map, change marker locations, and draw lines and polygons directly on the map.
+Airplane Tracker is a React-based web application that integrates with the Google Maps API. It provides interactive map features including real-time airplane tracking functionality and drawing tools.
 
 ## Features
 
-- **Interactive Map**: Displays a Google Map using the `@react-google-maps/api` library.
-- **Marker Management**: Users can place and move markers on the map.
-- **Drawing Tools**: Allows users to draw lines and polygons on the map.
+- **Interactive Map**: Displays a Google Map using the `@react-google-maps/api` library
+- **Real-time Airplane Tracking**:
+  - Displays aircraft icon, flight number, and flight path
+  - Updates position and heading according to real-time data streaming by WebSocket
+  - Uses WebSocket for real-time data streaming (mock implementation for development)
+- **Drawing Tools**: Allows users to draw lines and polygons on the map
 
 ## Preview
 
@@ -20,6 +23,7 @@ Draw on Google Map is a React-based web application that integrates with the Goo
 
 - Node.js (version specified in `.nvmrc`)
 - npm (Node Package Manager)
+- Google Maps API key with Maps JavaScript API enabled
 
 ### Installation
 
@@ -35,12 +39,12 @@ Draw on Google Map is a React-based web application that integrates with the Goo
    ```
 
 3. Set up environment variables:
-   - Create a `.env` file in the root directory.
-   - Add your Google Maps API key:
-     ```
-     REACT_APP_GOOGLE_MAPS_API_KEY=your_api_key_here
-     REACT_APP_GOOGLE_MAPS_MAP_ID=your_map_id_here
-     ```
+   Create a `.env` file in the root directory with:
+   ```
+   REACT_APP_GOOGLE_MAPS_API_KEY=your_api_key_here
+   REACT_APP_GOOGLE_MAPS_MAP_ID=your_map_id_here
+   REACT_APP_USE_MOCK=true  # Use mock data for development
+   ```
 
 ### Running the Application
 
@@ -58,19 +62,28 @@ Draw on Google Map is a React-based web application that integrates with the Goo
   npm run build
   ```
 
-## Scripts
+## Architecture
 
-- `npm start`: Starts the development server.
-- `npm run build`: Builds the app for production.
-- `npm run lint`: Lints the codebase using ESLint.
-- `npm test`: Runs the test suite using Jest.
+### Components
 
-## Code Structure
+- **Map**: Main component handling Google Maps integration and drawing tools
+- **FlightMarker**: Renders airplane icon, info window, and flight path
+- **ActionButton**: Reusable button component for drawing controls
 
-- **src/components/Map**: Contains the main map component and related utilities.
-- **src/components/Head**: Header component for the application.
-- **public/index.html**: The main HTML file.
-- **webpack.config.js**: Webpack configuration for bundling the application.
+### Services
+
+- **mockWebsocket.js**: Simulates WebSocket connection for development
+- **flightService.js**: Real WebSocket implementation for production
+- **index.js**: Service selector based on environment
+
+## WebSocket Implementation
+
+The application uses WebSocket for real-time flight data updates:
+
+- Development: Uses mock WebSocket that simulates flight movement
+- Production: Connects to real WebSocket server for live flight data
+- Auto-reconnection on connection loss
+- Cleanup on component unmount
 
 ## License
 
