@@ -2,13 +2,13 @@ import { GoogleMap, useJsApiLoader } from '@react-google-maps/api';
 import {
   memo, useCallback, useEffect, useState,
 } from 'react';
-import FlightMarker from '../FlightMarker';
+import FlightMarker from './FlightMarker';
 import subscribeToFlightData from '../../services';
 import ActionButton from './ActionButton';
 
 const defaultLocation = {
-  lat: -37.665,
-  lng: 144.841,
+  lat: -37.66,
+  lng: 144.88,
 };
 
 const mapContainerStyle = {
